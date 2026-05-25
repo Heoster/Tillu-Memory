@@ -1,0 +1,19 @@
+{
+  "version": 2,
+  "buildCommand": "npm run build",
+  "functions": {
+    "api/**/*.ts": {
+      "runtime": "@vercel/node"
+    }
+  },
+  "rewrites": [
+    { "source": "/memory/unified",     "destination": "/api/memory/unified" },
+    { "source": "/memory/write",       "destination": "/api/memory/write" },
+    { "source": "/memory/read",        "destination": "/api/memory/read" },
+    { "source": "/memory/search",      "destination": "/api/memory/search" },
+    { "source": "/memory/consolidate", "destination": "/api/memory/consolidate" },
+    { "source": "/memory/forget",      "destination": "/api/memory/forget" },
+    { "source": "/memory/pin",         "destination": "/api/memory/pin" },
+    { "source": "/health",             "destination": "/api/health" }
+  ]
+}
