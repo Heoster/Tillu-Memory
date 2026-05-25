@@ -1,0 +1,888 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tillu-Memory — API Docs</title>
+  <style>
+    :root {
+      --bg:       #0a0a0f;
+      --surface:  #111118;
+      --surface2: #16161f;
+      --border:   #1e1e2e;
+      --accent:   #7c6af7;
+      --accent2:  #a78bfa;
+      --green:    #34d399;
+      --red:      #f87171;
+      --yellow:   #fbbf24;
+      --blue:     #60a5fa;
+      --cyan:     #22d3ee;
+      --text:     #e2e8f0;
+      --muted:    #64748b;
+      --radius:   10px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg); color: var(--text);
+      font-family: 'Inter', system-ui, sans-serif;
+      display: flex; min-height: 100vh;
+    }
+    /* ── Sidebar ── */
+    .sidebar {
+      width: 260px; min-width: 260px;
+      border-right: 1px solid var(--border);
+      padding: 24px 0;
+      position: sticky; top: 0; height: 100vh;
+      overflow-y: auto; display: flex; flex-direction: column;
+    }
+    .sidebar-logo {
+      padding: 0 20px 20px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 16px;
+    }
+    .sidebar-logo h1 { font-size: 1rem; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+    .sidebar-logo p  { font-size: 0.72rem; color: var(--muted); margin-top: 4px; }
+    .nav-section { padding: 8px 20px 4px; font-size: 0.65rem; text-transform: uppercase;
+      letter-spacing: 0.1em; color: var(--muted); }
+    .nav-link {
+      display: flex; align-items: center; gap: 10px;
+      padding: 7px 20px; font-size: 0.82rem; color: var(--muted);
+      text-decoration: none; transition: all 0.15s; border-left: 2px solid transparent;
+    }
+    .nav-link:hover { color: var(--text); background: #111118; }
+    .nav-link.active { color: var(--accent2); border-left-color: var(--accent); background: #1a1a2e; }
+    .badge {
+      font-size: 0.6rem; font-weight: 700; padding: 1px 5px;
+      border-radius: 3px; margin-left: auto;
+    }
+    .GET    { background: #064e3b; color: #34d399; }
+    .POST   { background: #1e3a5f; color: #60a5fa; }
+    .PATCH  { background: #3b2a00; color: #fbbf24; }
+    .DELETE { background: #3b0a0a; color: #f87171; }
+    /* ── Main content ── */
+    .content { flex: 1; max-width: 860px; padding: 48px 56px; overflow-y: auto; }
+    h2.section-title {
+      font-size: 1.6rem; font-weight: 700; letter-spacing: -0.03em;
+      margin-bottom: 8px;
+    }
+    .section-subtitle { color: var(--muted); font-size: 0.9rem; margin-bottom: 40px; line-height: 1.6; }
+    /* ── Endpoint card ── */
+    .endpoint {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); margin-bottom: 32px; overflow: hidden;
+    }
+    .endpoint-header {
+      padding: 16px 20px; display: flex; align-items: center; gap: 12px;
+      border-bottom: 1px solid var(--border); cursor: pointer;
+      user-select: none;
+    }
+    .endpoint-header:hover { background: var(--surface2); }
+    .method-pill {
+      font-size: 0.72rem; font-weight: 700; padding: 3px 10px;
+      border-radius: 5px; min-width: 52px; text-align: center;
+    }
+    .endpoint-path { font-family: monospace; font-size: 0.95rem; font-weight: 600; }
+    .endpoint-summary { font-size: 0.82rem; color: var(--muted); margin-left: auto; }
+    .chevron { color: var(--muted); transition: transform 0.2s; margin-left: 8px; }
+    .endpoint.open .chevron { transform: rotate(90deg); }
+    .endpoint-body { padding: 24px; display: none; }
+    .endpoint.open .endpoint-body { display: block; }
+    /* ── Sections inside card ── */
+    .ep-desc { font-size: 0.88rem; color: var(--muted); line-height: 1.7; margin-bottom: 20px; }
+    .ep-section-title {
+      font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.1em;
+      color: var(--muted); margin-bottom: 10px; margin-top: 20px;
+    }
+    .ep-section-title:first-of-type { margin-top: 0; }
+    /* ── Params table ── */
+    table { width: 100%; border-collapse: collapse; font-size: 0.82rem; margin-bottom: 4px; }
+    th { text-align: left; padding: 8px 12px; background: #0d0d14;
+      color: var(--muted); font-weight: 600; font-size: 0.72rem;
+      text-transform: uppercase; letter-spacing: 0.05em; }
+    td { padding: 9px 12px; border-top: 1px solid var(--border); vertical-align: top; }
+    td:first-child { font-family: monospace; color: var(--cyan); white-space: nowrap; }
+    td:nth-child(2) { color: var(--yellow); white-space: nowrap; }
+    td:nth-child(3) { color: var(--muted); }
+    td:nth-child(4) { color: var(--text); }
+    .req { color: var(--red); font-size: 0.65rem; font-weight: 700;
+      background: #3b0a0a; padding: 1px 5px; border-radius: 3px; }
+    .opt { color: var(--muted); font-size: 0.65rem; font-weight: 700;
+      background: #1a1a2e; padding: 1px 5px; border-radius: 3px; }
+    /* ── Code blocks ── */
+    .code-tabs { display: flex; gap: 2px; margin-bottom: -1px; }
+    .code-tab {
+      padding: 5px 14px; font-size: 0.72rem; border-radius: 6px 6px 0 0;
+      border: 1px solid var(--border); border-bottom: none;
+      background: var(--surface2); color: var(--muted); cursor: pointer;
+    }
+    .code-tab.active { background: #0d0d14; color: var(--text); }
+    .code-block {
+      background: #0d0d14; border: 1px solid var(--border);
+      border-radius: 0 var(--radius) var(--radius) var(--radius);
+      padding: 16px 18px; position: relative; margin-bottom: 16px;
+    }
+    .code-block pre {
+      font-family: 'Fira Code', 'Cascadia Code', monospace;
+      font-size: 0.78rem; line-height: 1.7; color: #a5f3fc;
+      white-space: pre; overflow-x: auto;
+    }
+    .copy-btn {
+      position: absolute; top: 10px; right: 10px;
+      background: var(--border); border: none; color: var(--muted);
+      font-size: 0.7rem; padding: 3px 10px; border-radius: 4px;
+      cursor: pointer; transition: all 0.15s;
+    }
+    .copy-btn:hover { background: var(--accent); color: #fff; }
+    /* ── Response pills ── */
+    .response-list { display: flex; flex-direction: column; gap: 8px; }
+    .response-item {
+      display: flex; align-items: flex-start; gap: 10px;
+      padding: 10px 14px; background: #0d0d14;
+      border: 1px solid var(--border); border-radius: 8px; font-size: 0.82rem;
+    }
+    .status-code { font-weight: 700; font-family: monospace; min-width: 36px; }
+    .s200 { color: var(--green); } .s201 { color: var(--green); }
+    .s400 { color: var(--yellow); } .s404 { color: var(--yellow); }
+    .s409 { color: var(--yellow); } .s422 { color: var(--yellow); }
+    .s500 { color: var(--red); }
+    /* ── Info boxes ── */
+    .info-box {
+      border-left: 3px solid var(--accent); background: #1a1a2e;
+      padding: 12px 16px; border-radius: 0 8px 8px 0;
+      font-size: 0.82rem; line-height: 1.6; color: var(--text);
+      margin: 16px 0;
+    }
+    .warn-box {
+      border-left: 3px solid var(--yellow); background: #1f1a00;
+      padding: 12px 16px; border-radius: 0 8px 8px 0;
+      font-size: 0.82rem; line-height: 1.6; color: var(--text);
+      margin: 16px 0;
+    }
+    /* ── Misc ── */
+    .divider { border: none; border-top: 1px solid var(--border); margin: 48px 0; }
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+    @media (max-width: 768px) {
+      .sidebar { display: none; }
+      .content { padding: 24px 20px; }
+    }
+  </style>
+</head>
+<body>
+<!-- ── Sidebar ── -->
+<nav class="sidebar">
+  <div class="sidebar-logo">
+    <h1>🧠 Tillu-Memory</h1>
+    <p>API Reference v1.0</p>
+  </div>
+
+  <div class="nav-section">Overview</div>
+  <a href="#intro"      class="nav-link active">Introduction</a>
+  <a href="#auth"       class="nav-link">Authentication</a>
+  <a href="#base-url"   class="nav-link">Base URL</a>
+  <a href="#errors"     class="nav-link">Error Handling</a>
+  <a href="#rate-limits" class="nav-link">Rate Limits</a>
+
+  <div class="nav-section" style="margin-top:12px">Endpoints</div>
+  <a href="#unified"     class="nav-link"><span class="badge POST">POST</span>/memory/unified</a>
+  <a href="#write"       class="nav-link"><span class="badge POST">POST</span>/memory/write</a>
+  <a href="#read"        class="nav-link"><span class="badge GET">GET</span>/memory/read</a>
+  <a href="#search"      class="nav-link"><span class="badge POST">POST</span>/memory/search</a>
+  <a href="#consolidate" class="nav-link"><span class="badge POST">POST</span>/memory/consolidate</a>
+  <a href="#forget"      class="nav-link"><span class="badge DELETE">DEL</span>/memory/forget</a>
+  <a href="#pin"         class="nav-link"><span class="badge PATCH">PATCH</span>/memory/pin</a>
+  <a href="#health"      class="nav-link"><span class="badge GET">GET</span>/health</a>
+
+  <div class="nav-section" style="margin-top:12px">Data</div>
+  <a href="#types"   class="nav-link">Types &amp; Enums</a>
+  <a href="#layers"  class="nav-link">Memory Layers</a>
+  <a href="#flows"   class="nav-link">Integration Flows</a>
+
+  <div style="margin-top:auto; padding: 16px 20px;">
+    <a href="/" style="font-size:0.75rem; color:var(--muted); text-decoration:none;">← Back to Playground</a>
+  </div>
+</nav>
+<!-- ── Main content ── -->
+<main class="content">
+
+  <!-- INTRO -->
+  <section id="intro">
+    <h2 class="section-title">Tillu-Memory API</h2>
+    <p class="section-subtitle">
+      Tillu-Memory is a cognitive memory layer for AI assistants. It separates
+      <strong>working memory</strong> (what's happening right now) from
+      <strong>long-term memory</strong> (what matters forever) and provides
+      semantic search across all past interactions.
+    </p>
+
+    <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-bottom:32px;">
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;">
+        <div style="font-size:1.4rem;margin-bottom:6px;">⚡</div>
+        <div style="font-size:0.82rem;font-weight:600;">Working Memory</div>
+        <div style="font-size:0.72rem;color:var(--muted);margin-top:4px;">Upstash Redis · 30 min TTL</div>
+      </div>
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;">
+        <div style="font-size:1.4rem;margin-bottom:6px;">🧬</div>
+        <div style="font-size:0.82rem;font-weight:600;">Semantic Memory</div>
+        <div style="font-size:0.72rem;color:var(--muted);margin-top:4px;">Supabase pgvector · cosine similarity</div>
+      </div>
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;">
+        <div style="font-size:1.4rem;margin-bottom:6px;">📌</div>
+        <div style="font-size:0.82rem;font-weight:600;">Pinned Memory</div>
+        <div style="font-size:0.72rem;color:var(--muted);margin-top:4px;">Supabase Postgres · always injected</div>
+      </div>
+    </div>
+  </section>
+
+  <hr class="divider" />
+
+  <!-- AUTH -->
+  <section id="auth">
+    <h2 class="section-title" style="font-size:1.2rem;">Authentication</h2>
+    <p class="section-subtitle" style="margin-bottom:16px;">
+      All endpoints are server-to-server. There is no API key required on the HTTP level —
+      access control is enforced by your backend. Each request must include a <code style="color:var(--cyan);font-family:monospace;">user_id</code>
+      which scopes all data to that user.
+    </p>
+    <div class="warn-box">
+      ⚠️ Never expose this API directly to end users. Call it from your backend (Tillu-Think, etc.) only.
+      All data is scoped by <code style="font-family:monospace;">user_id</code> — passing the wrong ID exposes another user's memory.
+    </div>
+  </section>
+
+  <hr class="divider" />
+
+  <!-- BASE URL -->
+  <section id="base-url">
+    <h2 class="section-title" style="font-size:1.2rem;">Base URL</h2>
+    <div class="code-block" style="margin-top:12px;">
+      <pre>https://tillu-memory.vercel.app</pre>
+    </div>
+    <p style="font-size:0.85rem;color:var(--muted);">All endpoints accept and return <strong style="color:var(--text);">JSON</strong>. Set <code style="font-family:monospace;color:var(--cyan);">Content-Type: application/json</code> on all POST/PATCH/DELETE requests.</p>
+  </section>
+
+  <hr class="divider" />
+  <!-- ERRORS -->
+  <section id="errors">
+    <h2 class="section-title" style="font-size:1.2rem;">Error Handling</h2>
+    <p style="font-size:0.85rem;color:var(--muted);margin:12px 0 16px;">All errors return a JSON body with an <code style="font-family:monospace;color:var(--cyan);">error</code> field and an optional <code style="font-family:monospace;color:var(--cyan);">detail</code> or <code style="font-family:monospace;color:var(--cyan);">details</code> field.</p>
+    <div class="code-block">
+      <pre><span style="color:#94a3b8;">// 400 Bad Request</span>
+{
+  <span style="color:#86efac;">"error"</span>: <span style="color:#fca5a5;">"Invalid request"</span>,
+  <span style="color:#86efac;">"details"</span>: {
+    <span style="color:#86efac;">"fieldErrors"</span>: { <span style="color:#86efac;">"user_id"</span>: [<span style="color:#fca5a5;">"Required"</span>] }
+  }
+}
+
+<span style="color:#94a3b8;">// 500 Internal Server Error</span>
+{
+  <span style="color:#86efac;">"error"</span>: <span style="color:#fca5a5;">"Internal server error"</span>,
+  <span style="color:#86efac;">"detail"</span>: <span style="color:#fca5a5;">"Supabase: relation does not exist"</span>
+}</pre>
+    </div>
+    <div class="response-list">
+      <div class="response-item"><span class="status-code s200">400</span><span>Missing or invalid fields — check the <code style="font-family:monospace;">details.fieldErrors</code> map</span></div>
+      <div class="response-item"><span class="status-code s400">404</span><span>Route not found</span></div>
+      <div class="response-item"><span class="status-code s409">405</span><span>Wrong HTTP method for this endpoint</span></div>
+      <div class="response-item"><span class="status-code s409">409</span><span>Consolidation already in progress for this user (lock held)</span></div>
+      <div class="response-item"><span class="status-code s422">422</span><span>Pin limit reached — unpin an existing memory first</span></div>
+      <div class="response-item"><span class="status-code s500">500</span><span>Upstream error (Supabase, Redis, HuggingFace, Groq)</span></div>
+    </div>
+  </section>
+
+  <hr class="divider" />
+
+  <!-- RATE LIMITS -->
+  <section id="rate-limits">
+    <h2 class="section-title" style="font-size:1.2rem;">Rate Limits</h2>
+    <p style="font-size:0.85rem;color:var(--muted);margin:12px 0 16px;">Limits are enforced per <code style="font-family:monospace;color:var(--cyan);">user_id</code>.</p>
+    <table>
+      <thead><tr><th>Endpoint group</th><th>Limit</th><th>Window</th></tr></thead>
+      <tbody>
+        <tr><td>Write operations (unified, write, forget, pin)</td><td style="color:var(--green);">30 requests</td><td>per minute</td></tr>
+        <tr><td>Read operations (read, search)</td><td style="color:var(--green);">120 requests</td><td>per minute</td></tr>
+        <tr><td>Consolidate</td><td style="color:var(--green);">1 request</td><td>per 10 minutes</td></tr>
+        <tr><td>Max pinned memories</td><td style="color:var(--yellow);">50</td><td>per user (hard limit)</td></tr>
+        <tr><td>Max working messages</td><td style="color:var(--yellow);">50</td><td>per session (oldest trimmed)</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <hr class="divider" />
+
+  <!-- ENDPOINTS HEADING -->
+  <h2 class="section-title" id="endpoints-heading">Endpoints</h2>
+  <p class="section-subtitle">Click any endpoint to expand its full documentation.</p>
+  <!-- ── POST /memory/unified ── -->
+  <div class="endpoint open" id="unified">
+    <div class="endpoint-header" onclick="toggle(this)">
+      <span class="method-pill POST">POST</span>
+      <span class="endpoint-path">/memory/unified</span>
+      <span class="endpoint-summary">The magic endpoint — write + read in one call</span>
+      <span class="chevron">▶</span>
+    </div>
+    <div class="endpoint-body">
+      <p class="ep-desc">
+        The primary interface for Tillu-Think. Send one request and get back everything needed
+        to reason: the current conversation buffer, pinned facts, user profile, and semantically
+        relevant past memories — all in a single response.<br><br>
+        With <code style="font-family:monospace;color:var(--cyan);">action: "auto"</code> (default), it writes the incoming message to working memory
+        <em>and</em> reads all context layers simultaneously.
+      </p>
+
+      <div class="ep-section-title">Request Body</div>
+      <table>
+        <thead><tr><th>Field</th><th>Type</th><th>Required</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td>user_id</td><td>string</td><td><span class="req">required</span></td><td>Unique identifier for the user</td></tr>
+          <tr><td>session_id</td><td>string</td><td><span class="req">required</span></td><td>Current conversation session ID</td></tr>
+          <tr><td>action</td><td>enum</td><td><span class="opt">optional</span></td><td><code style="font-family:monospace;">"auto"</code> | <code style="font-family:monospace;">"read"</code> | <code style="font-family:monospace;">"write"</code> — defaults to <code style="font-family:monospace;">"auto"</code></td></tr>
+          <tr><td>message</td><td>string</td><td><span class="opt">optional</span></td><td>The incoming message text. Used as the write payload and semantic search query</td></tr>
+          <tr><td>role</td><td>enum</td><td><span class="opt">optional</span></td><td><code style="font-family:monospace;">"user"</code> | <code style="font-family:monospace;">"assistant"</code> | <code style="font-family:monospace;">"system"</code> — defaults to <code style="font-family:monospace;">"user"</code></td></tr>
+          <tr><td>importance</td><td>enum</td><td><span class="opt">optional</span></td><td><code style="font-family:monospace;">"critical"</code> | <code style="font-family:monospace;">"high"</code> | <code style="font-family:monospace;">"normal"</code> | <code style="font-family:monospace;">"low"</code> — defaults to <code style="font-family:monospace;">"normal"</code></td></tr>
+        </tbody>
+      </table>
+
+      <div class="ep-section-title">Example Request</div>
+      <div class="code-block">
+        <button class="copy-btn" onclick="copy(this)">Copy</button>
+        <pre>{
+  "user_id":    "user_123",
+  "session_id": "sess_456",
+  "action":     "auto",
+  "message":    "मुझे याद दिलाओ हमने API के बारे में क्या decide किया था",
+  "role":       "user"
+}</pre>
+      </div>
+
+      <div class="ep-section-title">Response — 200 OK</div>
+      <div class="code-block">
+        <pre>{
+  "working_memory": [
+    { "role": "user", "content": "...", "timestamp": "2026-05-25T08:00:00Z" }
+  ],
+  "pinned_facts":  ["User's name is Rahul", "User prefers Hindi responses"],
+  "relevant_past": [
+    {
+      "id":              "mem_abc",
+      "content":         "Decided to use REST API with JSON format",
+      "created_at":      "2026-05-24T10:00:00Z",
+      "importance":      "high",
+      "type":            "fact",
+      "topic_tags":      ["api", "rest"],
+      "similarity_score": 0.91
+    }
+  ],
+  "profile": {
+    "language_preference":  "hi",
+    "communication_style":  "brief",
+    "expertise_level":      "expert"
+  },
+  "actions_taken": ["write_to_working", "read_working", "read_pinned", "read_profile", "semantic_search"]
+}</pre>
+      </div>
+
+      <div class="info-box">
+        💡 <strong>action: "read"</strong> — skips the write, returns context only. Use this when Tillu-Think needs context before the user has sent a new message.<br>
+        💡 <strong>action: "write"</strong> — only appends to working memory, no context returned. Use for assistant replies.
+      </div>
+    </div>
+  </div>
+  <!-- ── POST /memory/write ── -->
+  <div class="endpoint" id="write">
+    <div class="endpoint-header" onclick="toggle(this)">
+      <span class="method-pill POST">POST</span>
+      <span class="endpoint-path">/memory/write</span>
+      <span class="endpoint-summary">Explicitly store a memory</span>
+      <span class="chevron">▶</span>
+    </div>
+    <div class="endpoint-body">
+      <p class="ep-desc">
+        Store a specific memory with full control over type and importance.
+        Use this when Tillu-Think detects a fact or preference worth persisting mid-conversation —
+        for example, when the user says their name, mentions an allergy, or states a preference.
+      </p>
+      <div class="info-box">
+        🔴 <strong>importance: "critical"</strong> → automatically sets <code style="font-family:monospace;">is_pinned: true</code>. No embedding is generated — the memory is always fetched directly on every request.<br>
+        🔵 <strong>importance: "high" / "normal" / "low"</strong> → embedded via HuggingFace and stored for semantic search.<br>
+        🟡 <strong>type: "preference"</strong> → also updates <code style="font-family:monospace;">users.profile_data</code> JSONB automatically.
+      </div>
+
+      <div class="ep-section-title">Request Body</div>
+      <table>
+        <thead><tr><th>Field</th><th>Type</th><th>Required</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td>user_id</td><td>string</td><td><span class="req">required</span></td><td>User identifier</td></tr>
+          <tr><td>content</td><td>string</td><td><span class="req">required</span></td><td>The memory text. Max 10,000 characters</td></tr>
+          <tr><td>type</td><td>enum</td><td><span class="req">required</span></td><td><code style="font-family:monospace;">"fact"</code> | <code style="font-family:monospace;">"event"</code> | <code style="font-family:monospace;">"preference"</code> | <code style="font-family:monospace;">"summary"</code></td></tr>
+          <tr><td>importance</td><td>enum</td><td><span class="req">required</span></td><td><code style="font-family:monospace;">"critical"</code> | <code style="font-family:monospace;">"high"</code> | <code style="font-family:monospace;">"normal"</code> | <code style="font-family:monospace;">"low"</code></td></tr>
+          <tr><td>session_id</td><td>string</td><td><span class="opt">optional</span></td><td>Links the memory to a session for traceability</td></tr>
+          <tr><td>topic_tags</td><td>string[]</td><td><span class="opt">optional</span></td><td>Tags for filtering, e.g. <code style="font-family:monospace;">["api", "deployment"]</code></td></tr>
+        </tbody>
+      </table>
+
+      <div class="ep-section-title">Example — Critical Fact</div>
+      <div class="code-block">
+        <button class="copy-btn" onclick="copy(this)">Copy</button>
+        <pre>{
+  "user_id":    "user_123",
+  "content":    "User's name is Rahul and he is allergic to peanuts",
+  "type":       "fact",
+  "importance": "critical",
+  "session_id": "sess_456"
+}</pre>
+      </div>
+
+      <div class="ep-section-title">Response — 201 Created</div>
+      <div class="code-block">
+        <pre>{
+  "memory_id":       "84b06e05-6d9a-449c-919f-7c4b20982a11",
+  "is_pinned":       true,
+  "profile_updated": false,
+  "message":         "Memory stored and pinned (critical importance)."
+}</pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── GET /memory/read ── -->
+  <div class="endpoint" id="read">
+    <div class="endpoint-header" onclick="toggle(this)">
+      <span class="method-pill GET">GET</span>
+      <span class="endpoint-path">/memory/read</span>
+      <span class="endpoint-summary">Read full context bundle — no writes</span>
+      <span class="chevron">▶</span>
+    </div>
+    <div class="endpoint-body">
+      <p class="ep-desc">
+        Pure read — fetches working memory, pinned facts, user profile, and optionally runs a
+        semantic search. No data is written. Used by Tillu-Voice to get language preference
+        before speaking, or by dashboards to display user memory.
+      </p>
+
+      <div class="ep-section-title">Query Parameters</div>
+      <table>
+        <thead><tr><th>Param</th><th>Type</th><th>Required</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td>user_id</td><td>string</td><td><span class="req">required</span></td><td>User identifier</td></tr>
+          <tr><td>session_id</td><td>string</td><td><span class="req">required</span></td><td>Session to read working memory from</td></tr>
+          <tr><td>query</td><td>string</td><td><span class="opt">optional</span></td><td>If provided, runs a semantic search and includes results</td></tr>
+        </tbody>
+      </table>
+
+      <div class="ep-section-title">Example Request</div>
+      <div class="code-block">
+        <button class="copy-btn" onclick="copy(this)">Copy</button>
+        <pre>GET /memory/read?user_id=user_123&session_id=sess_456&query=API+design</pre>
+      </div>
+
+      <div class="ep-section-title">Response — 200 OK</div>
+      <div class="code-block">
+        <pre>{
+  "working_memory":   [ ...last N messages... ],
+  "pinned_facts":     ["User's name is Rahul"],
+  "profile":          { "language_preference": "hi", "communication_style": "brief" },
+  "semantic_results": [ ...top matching past memories... ]
+}</pre>
+      </div>
+    </div>
+  </div>
+  <!-- ── POST /memory/search ── -->
+  <div class="endpoint" id="search">
+    <div class="endpoint-header" onclick="toggle(this)">
+      <span class="method-pill POST">POST</span>
+      <span class="endpoint-path">/memory/search</span>
+      <span class="endpoint-summary">Semantic similarity search across all past memories</span>
+      <span class="chevron">▶</span>
+    </div>
+    <div class="endpoint-body">
+      <p class="ep-desc">
+        Embeds the query using HuggingFace <code style="font-family:monospace;color:var(--cyan);">all-MiniLM-L6-v2</code> and runs a cosine similarity
+        search against all stored memories for the user. Results are ranked by similarity with a
+        time-decay boost — recent memories rank higher than old ones with the same score.
+        Pinned memories are excluded (they're always returned via <code style="font-family:monospace;color:var(--cyan);">/memory/read</code>).
+      </p>
+
+      <div class="ep-section-title">Request Body</div>
+      <table>
+        <thead><tr><th>Field</th><th>Type</th><th>Required</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td>user_id</td><td>string</td><td><span class="req">required</span></td><td>User identifier</td></tr>
+          <tr><td>query</td><td>string</td><td><span class="req">required</span></td><td>Natural language query. Max 1,000 characters. Supports Hindi, Tamil, English</td></tr>
+          <tr><td>top_k</td><td>number</td><td><span class="opt">optional</span></td><td>Number of results to return. Default: 5, max: 20</td></tr>
+          <tr><td>time_filter</td><td>enum</td><td><span class="opt">optional</span></td><td><code style="font-family:monospace;">"all"</code> | <code style="font-family:monospace;">"last_7_days"</code> | <code style="font-family:monospace;">"last_30_days"</code> | <code style="font-family:monospace;">"last_90_days"</code></td></tr>
+        </tbody>
+      </table>
+
+      <div class="ep-section-title">Example Request</div>
+      <div class="code-block">
+        <button class="copy-btn" onclick="copy(this)">Copy</button>
+        <pre>{
+  "user_id":     "user_123",
+  "query":       "What did we decide about the database?",
+  "top_k":       5,
+  "time_filter": "last_30_days"
+}</pre>
+      </div>
+
+      <div class="ep-section-title">Response — 200 OK</div>
+      <div class="code-block">
+        <pre>{
+  "results": [
+    {
+      "id":              "mem_xyz",
+      "content":         "Decided to use Supabase Postgres for structured data",
+      "created_at":      "2026-05-20T14:30:00Z",
+      "importance":      "high",
+      "type":            "fact",
+      "topic_tags":      ["database", "supabase"],
+      "similarity_score": 0.89
+    }
+  ],
+  "query_used":  "What did we decide about the database?",
+  "total_found": 1
+}</pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── POST /memory/consolidate ── -->
+  <div class="endpoint" id="consolidate">
+    <div class="endpoint-header" onclick="toggle(this)">
+      <span class="method-pill POST">POST</span>
+      <span class="endpoint-path">/memory/consolidate</span>
+      <span class="endpoint-summary">Compress session into long-term memory</span>
+      <span class="chevron">▶</span>
+    </div>
+    <div class="endpoint-body">
+      <p class="ep-desc">
+        The "sleep" function. Pulls all messages from Redis working memory, uses Groq
+        (<code style="font-family:monospace;color:var(--cyan);">llama-3.3-70b-versatile</code>) to extract a summary, key facts, and user preferences,
+        then stores everything in Supabase and clears Redis. Call this when a session ends
+        gracefully or from a cron job when the Redis TTL expires.
+      </p>
+      <div class="warn-box">
+        ⏱️ This endpoint can take 5–15 seconds (Groq LLM call + multiple Supabase writes).
+        It has a <strong>30-second timeout</strong> on Vercel and a <strong>10-minute rate limit</strong> per user.
+        A Redis lock prevents duplicate processing — concurrent calls return <code style="font-family:monospace;">409</code>.
+      </div>
+
+      <div class="ep-section-title">Request Body</div>
+      <table>
+        <thead><tr><th>Field</th><th>Type</th><th>Required</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td>user_id</td><td>string</td><td><span class="req">required</span></td><td>User identifier</td></tr>
+          <tr><td>session_id</td><td>string</td><td><span class="req">required</span></td><td>Session to consolidate</td></tr>
+        </tbody>
+      </table>
+
+      <div class="ep-section-title">Example Request</div>
+      <div class="code-block">
+        <button class="copy-btn" onclick="copy(this)">Copy</button>
+        <pre>{
+  "user_id":    "user_123",
+  "session_id": "sess_456"
+}</pre>
+      </div>
+
+      <div class="ep-section-title">Response — 200 OK</div>
+      <div class="code-block">
+        <pre>{
+  "summary":               "User asked about Python deployment and decided to use Railway over Docker.",
+  "facts_extracted":       3,
+  "preferences_extracted": 1,
+  "session_id":            "sess_456",
+  "message":               "Session consolidated into long-term memory."
+}</pre>
+      </div>
+    </div>
+  </div>
+  <!-- ── DELETE /memory/forget ── -->
+  <div class="endpoint" id="forget">
+    <div class="endpoint-header" onclick="toggle(this)">
+      <span class="method-pill DELETE">DELETE</span>
+      <span class="endpoint-path">/memory/forget</span>
+      <span class="endpoint-summary">GDPR-compliant memory deletion</span>
+      <span class="chevron">▶</span>
+    </div>
+    <div class="endpoint-body">
+      <p class="ep-desc">
+        Delete one specific memory by ID, or wipe an entire category of memories for a user.
+        Designed for GDPR compliance and user-requested data deletion.
+        Provide either <code style="font-family:monospace;color:var(--cyan);">memory_id</code> or <code style="font-family:monospace;color:var(--cyan);">type</code> — not both.
+      </p>
+
+      <div class="ep-section-title">Request Body</div>
+      <table>
+        <thead><tr><th>Field</th><th>Type</th><th>Required</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td>user_id</td><td>string</td><td><span class="req">required</span></td><td>User identifier</td></tr>
+          <tr><td>memory_id</td><td>string</td><td><span class="opt">optional*</span></td><td>Delete one specific memory by ID</td></tr>
+          <tr><td>type</td><td>enum</td><td><span class="opt">optional*</span></td><td><code style="font-family:monospace;">"all"</code> | <code style="font-family:monospace;">"working"</code> | <code style="font-family:monospace;">"semantic"</code> | <code style="font-family:monospace;">"pinned"</code> | <code style="font-family:monospace;">"profile"</code></td></tr>
+          <tr><td>session_id</td><td>string</td><td><span class="opt">optional</span></td><td>Required when <code style="font-family:monospace;">type = "working"</code> or <code style="font-family:monospace;">type = "all"</code></td></tr>
+        </tbody>
+      </table>
+      <p style="font-size:0.75rem;color:var(--muted);margin-top:6px;">* Provide exactly one of <code style="font-family:monospace;">memory_id</code> or <code style="font-family:monospace;">type</code>.</p>
+
+      <div class="ep-section-title">Type values explained</div>
+      <table>
+        <thead><tr><th>type</th><th>What gets deleted</th></tr></thead>
+        <tbody>
+          <tr><td>all</td><td>Everything — Redis working memory + all Supabase memories + profile reset</td></tr>
+          <tr><td>working</td><td>Redis working memory for the given session only</td></tr>
+          <tr><td>semantic</td><td>All non-pinned memories from Supabase</td></tr>
+          <tr><td>pinned</td><td>All pinned memories from Supabase</td></tr>
+          <tr><td>profile</td><td>Resets <code style="font-family:monospace;">profile_data</code> to <code style="font-family:monospace;">{}</code> and deletes preference-type memories</td></tr>
+        </tbody>
+      </table>
+
+      <div class="ep-section-title">Example — Delete one memory</div>
+      <div class="code-block">
+        <button class="copy-btn" onclick="copy(this)">Copy</button>
+        <pre>{
+  "user_id":   "user_123",
+  "memory_id": "84b06e05-6d9a-449c-919f-7c4b20982a11"
+}</pre>
+      </div>
+
+      <div class="ep-section-title">Example — Wipe everything (GDPR)</div>
+      <div class="code-block">
+        <button class="copy-btn" onclick="copy(this)">Copy</button>
+        <pre>{
+  "user_id":    "user_123",
+  "type":       "all",
+  "session_id": "sess_456"
+}</pre>
+      </div>
+
+      <div class="ep-section-title">Response — 200 OK</div>
+      <div class="code-block">
+        <pre>{
+  "deleted": ["all_memories", "working_memory", "profile"],
+  "message": "Deleted: all_memories, working_memory, profile."
+}</pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── PATCH /memory/pin ── -->
+  <div class="endpoint" id="pin">
+    <div class="endpoint-header" onclick="toggle(this)">
+      <span class="method-pill PATCH">PATCH</span>
+      <span class="endpoint-path">/memory/pin</span>
+      <span class="endpoint-summary">Pin or unpin a memory</span>
+      <span class="chevron">▶</span>
+    </div>
+    <div class="endpoint-body">
+      <p class="ep-desc">
+        Toggle the pinned state of a memory. Pinned memories are always injected into context
+        on every <code style="font-family:monospace;color:var(--cyan);">/memory/unified</code> and <code style="font-family:monospace;color:var(--cyan);">/memory/read</code> call — they never need to be searched for.
+        Maximum 50 pinned memories per user. Attempting to pin beyond the limit returns <code style="font-family:monospace;">422</code>.
+      </p>
+
+      <div class="ep-section-title">Request Body</div>
+      <table>
+        <thead><tr><th>Field</th><th>Type</th><th>Required</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td>user_id</td><td>string</td><td><span class="req">required</span></td><td>User identifier</td></tr>
+          <tr><td>memory_id</td><td>string</td><td><span class="req">required</span></td><td>ID of the memory to pin/unpin</td></tr>
+          <tr><td>pinned</td><td>boolean</td><td><span class="req">required</span></td><td><code style="font-family:monospace;">true</code> to pin, <code style="font-family:monospace;">false</code> to unpin</td></tr>
+        </tbody>
+      </table>
+
+      <div class="ep-section-title">Example Request</div>
+      <div class="code-block">
+        <button class="copy-btn" onclick="copy(this)">Copy</button>
+        <pre>{
+  "user_id":   "user_123",
+  "memory_id": "84b06e05-6d9a-449c-919f-7c4b20982a11",
+  "pinned":    true
+}</pre>
+      </div>
+
+      <div class="ep-section-title">Response — 200 OK</div>
+      <div class="code-block">
+        <pre>{
+  "memory_id": "84b06e05-6d9a-449c-919f-7c4b20982a11",
+  "is_pinned": true,
+  "message":   "Memory pinned. It will always be included in context."
+}</pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── GET /health ── -->
+  <div class="endpoint" id="health">
+    <div class="endpoint-header" onclick="toggle(this)">
+      <span class="method-pill GET">GET</span>
+      <span class="endpoint-path">/health</span>
+      <span class="endpoint-summary">Service health check</span>
+      <span class="chevron">▶</span>
+    </div>
+    <div class="endpoint-body">
+      <p class="ep-desc">Returns service status and current timestamp. No authentication required. Use for uptime monitoring.</p>
+      <div class="ep-section-title">Response — 200 OK</div>
+      <div class="code-block">
+        <pre>{
+  "status":    "ok",
+  "service":   "tillu-memory",
+  "version":   "1.0.0",
+  "timestamp": "2026-05-25T08:50:09.408Z"
+}</pre>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider" />
+  <!-- TYPES -->
+  <section id="types">
+    <h2 class="section-title" style="font-size:1.2rem;">Types &amp; Enums</h2>
+
+    <div class="ep-section-title" style="margin-top:16px;">MemoryType</div>
+    <table>
+      <thead><tr><th>Value</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td>fact</td><td>A hard fact about the user or world — name, location, decision made</td></tr>
+        <tr><td>event</td><td>Something that happened — "User deployed to production on May 25"</td></tr>
+        <tr><td>preference</td><td>A user preference — language, style, interests. Also updates profile_data</td></tr>
+        <tr><td>summary</td><td>A compressed session summary generated by consolidation</td></tr>
+      </tbody>
+    </table>
+
+    <div class="ep-section-title" style="margin-top:20px;">ImportanceLevel</div>
+    <table>
+      <thead><tr><th>Value</th><th>Pinned?</th><th>Embedded?</th><th>Use for</th></tr></thead>
+      <tbody>
+        <tr><td>critical</td><td style="color:var(--green);">✓ always</td><td style="color:var(--red);">✗ never</td><td>Name, allergies, medical conditions, identity facts</td></tr>
+        <tr><td>high</td><td style="color:var(--red);">✗</td><td style="color:var(--green);">✓</td><td>Important decisions, deployment choices, key preferences</td></tr>
+        <tr><td>normal</td><td style="color:var(--red);">✗</td><td style="color:var(--green);">✓</td><td>General conversation facts</td></tr>
+        <tr><td>low</td><td style="color:var(--red);">✗</td><td style="color:var(--green);">✓</td><td>Trivia, passing mentions — subject to decay after 90 days</td></tr>
+      </tbody>
+    </table>
+
+    <div class="ep-section-title" style="margin-top:20px;">RelevantMemory (search result object)</div>
+    <table>
+      <thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td>id</td><td>string</td><td>UUID of the memory</td></tr>
+        <tr><td>content</td><td>string</td><td>The memory text</td></tr>
+        <tr><td>created_at</td><td>string</td><td>ISO 8601 timestamp</td></tr>
+        <tr><td>importance</td><td>ImportanceLevel</td><td>Importance level</td></tr>
+        <tr><td>type</td><td>MemoryType</td><td>Memory type</td></tr>
+        <tr><td>topic_tags</td><td>string[]</td><td>Tags associated with this memory</td></tr>
+        <tr><td>similarity_score</td><td>number</td><td>0–1 cosine similarity with time-decay applied. Only present in search results</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <hr class="divider" />
+
+  <!-- LAYERS -->
+  <section id="layers">
+    <h2 class="section-title" style="font-size:1.2rem;">Memory Layers</h2>
+    <p style="font-size:0.85rem;color:var(--muted);margin:12px 0 20px;">Five distinct layers, each with a different purpose and lifetime.</p>
+    <table>
+      <thead><tr><th>Layer</th><th>Storage</th><th>Lifetime</th><th>Purpose</th></tr></thead>
+      <tbody>
+        <tr><td>⚡ Working</td><td>Upstash Redis</td><td>30 min inactivity TTL</td><td>Current conversation buffer. Last 50 messages per session</td></tr>
+        <tr><td>📌 Pinned</td><td>Supabase Postgres</td><td>Permanent</td><td>Critical facts always injected into context. Max 50/user</td></tr>
+        <tr><td>🧬 Semantic</td><td>Supabase pgvector</td><td>90 days (if unaccessed)</td><td>Embedded memories. Similarity search. Conceptual recall</td></tr>
+        <tr><td>📊 Profile</td><td>Supabase JSONB</td><td>Permanent</td><td>Aggregated user preferences — language, style, expertise</td></tr>
+        <tr><td>🗂️ Sessions</td><td>Supabase Postgres</td><td>Permanent</td><td>Compressed session summaries. "What did we talk about last week?"</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <hr class="divider" />
+
+  <!-- FLOWS -->
+  <section id="flows">
+    <h2 class="section-title" style="font-size:1.2rem;">Integration Flows</h2>
+
+    <div class="ep-section-title" style="margin-top:16px;">Flow A — New message arrives (Tillu-Think)</div>
+    <div class="code-block">
+      <pre><span style="color:#94a3b8;">1.</span> User sends message
+<span style="color:#94a3b8;">2.</span> POST /memory/unified  { action: "auto", message: "...", role: "user" }
+<span style="color:#94a3b8;">3.</span> Response contains: working_memory + pinned_facts + profile + relevant_past
+<span style="color:#94a3b8;">4.</span> Tillu-Think builds prompt using this context
+<span style="color:#94a3b8;">5.</span> Tillu-Think generates reply
+<span style="color:#94a3b8;">6.</span> POST /memory/unified  { action: "write", message: reply, role: "assistant" }</pre>
+    </div>
+
+    <div class="ep-section-title" style="margin-top:20px;">Flow B — Session ends / user goes idle</div>
+    <div class="code-block">
+      <pre><span style="color:#94a3b8;">1.</span> No activity for 30 min → Redis TTL expires
+<span style="color:#94a3b8;">2.</span> Cron job (or Tillu-MAX) calls POST /memory/consolidate
+<span style="color:#94a3b8;">3.</span> Groq summarizes conversation → extracts facts + preferences
+<span style="color:#94a3b8;">4.</span> Summary stored in sessions table
+<span style="color:#94a3b8;">5.</span> Facts embedded → stored in memories table
+<span style="color:#94a3b8;">6.</span> Preferences merged into users.profile_data
+<span style="color:#94a3b8;">7.</span> Redis working memory cleared</pre>
+    </div>
+
+    <div class="ep-section-title" style="margin-top:20px;">Flow C — Critical fact detected</div>
+    <div class="code-block">
+      <pre><span style="color:#94a3b8;">1.</span> User: "मेरा नाम राहुल है और मुझे peanuts से allergy है"
+<span style="color:#94a3b8;">2.</span> Tillu-Think detects critical facts
+<span style="color:#94a3b8;">3.</span> POST /memory/write  { content: "...", type: "fact", importance: "critical" }
+<span style="color:#94a3b8;">4.</span> Memory auto-pinned → injected into every future context bundle</pre>
+    </div>
+
+    <div class="ep-section-title" style="margin-top:20px;">Service integration map</div>
+    <table>
+      <thead><tr><th>Service</th><th>Calls</th><th>Why</th></tr></thead>
+      <tbody>
+        <tr><td>Tillu-Think</td><td>POST /memory/unified</td><td>Full context before reasoning</td></tr>
+        <tr><td>Tillu-Think</td><td>POST /memory/write</td><td>Save extracted facts mid-conversation</td></tr>
+        <tr><td>Tillu-Voice</td><td>GET /memory/read</td><td>Language preference before speaking</td></tr>
+        <tr><td>Tillu-Search</td><td>POST /memory/search</td><td>"Has the user searched this before?"</td></tr>
+        <tr><td>Tillu-MAX</td><td>POST /memory/consolidate</td><td>End session gracefully</td></tr>
+        <tr><td>Cron Job</td><td>POST /memory/consolidate</td><td>Clean up expired sessions</td></tr>
+        <tr><td>User Dashboard</td><td>GET /memory/read, DELETE /memory/forget</td><td>User views and manages their data</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <hr class="divider" />
+  <p style="font-size:0.75rem;color:var(--muted);text-align:center;padding-bottom:48px;">
+    Tillu-Memory v1.0 · Built with Supabase, Upstash Redis, HuggingFace &amp; Groq ·
+    <a href="/" style="color:var(--accent2);text-decoration:none;">← Playground</a>
+  </p>
+
+</main>
+
+<script>
+  // ── Toggle endpoint cards ─────────────────────────────────────────────────
+  function toggle(header) {
+    header.parentElement.classList.toggle('open');
+  }
+
+  // ── Copy code blocks ──────────────────────────────────────────────────────
+  function copy(btn) {
+    const code = btn.nextElementSibling.textContent;
+    navigator.clipboard.writeText(code.trim()).then(() => {
+      btn.textContent = 'Copied!';
+      setTimeout(() => btn.textContent = 'Copy', 1500);
+    });
+  }
+
+  // ── Active nav link on scroll ─────────────────────────────────────────────
+  const sections = document.querySelectorAll('[id]');
+  const navLinks = document.querySelectorAll('.nav-link');
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        navLinks.forEach(l => l.classList.remove('active'));
+        const active = document.querySelector(`.nav-link[href="#${entry.target.id}"]`);
+        if (active) active.classList.add('active');
+      }
+    });
+  }, { rootMargin: '-20% 0px -70% 0px' });
+
+  sections.forEach(s => observer.observe(s));
+</script>
+</body>
+</html>
