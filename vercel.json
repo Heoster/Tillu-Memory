@@ -12,6 +12,7 @@
     { "source": "/memory/consolidate", "destination": "/api/memory/consolidate" },
     { "source": "/memory/forget",      "destination": "/api/memory/forget" },
     { "source": "/memory/pin",         "destination": "/api/memory/pin" },
-    { "source": "/health",             "destination": "/api/health" }
+    { "source": "/health",             "destination": "/api/health" },
+    { "source": "/",                   "destination": "/api/index" }
   ]
 }
