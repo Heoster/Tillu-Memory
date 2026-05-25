@@ -10,8 +10,7 @@
   "dependencies": {
     "@supabase/supabase-js": "2.43.4",
     "@upstash/redis": "1.31.5",
-    "@vercel/node": "3.2.7",
-    "dotenv": "^16.4.5",
+    "dotenv": "16.4.5",
     "groq-sdk": "0.3.3",
     "uuid": "10.0.0",
     "zod": "3.23.8"
@@ -19,6 +18,7 @@
   "devDependencies": {
     "@types/node": "20.14.2",
     "@types/uuid": "10.0.0",
+    "@vercel/node": "3.2.7",
     "tsx": "4.15.6",
     "typescript": "5.4.5",
     "vercel": "34.2.7"

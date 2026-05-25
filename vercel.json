@@ -2,9 +2,7 @@
   "version": 2,
   "buildCommand": "npm run build",
   "functions": {
-    "api/**/*.ts": {
-      "runtime": "@vercel/node"
-    }
+    "api/memory/consolidate.ts": { "maxDuration": 30 }
   },
   "rewrites": [
     { "source": "/memory/unified",     "destination": "/api/memory/unified" },
