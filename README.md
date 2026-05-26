@@ -18,19 +18,19 @@
 
 ## Setup
 
-### 1. Install dependencies
+### 1. Install  dependencies
 ```bash
 npm install
 ```
 
-### 2. Configure environment
+### 2. Configure  environment
 ```bash
 cp .env.example .env
 # Fill in your Supabase, Upstash, and Groq credentials
 ```
 
 ### 3. Set up Supabase database
-Run these SQL files in your **Supabase SQL Editor** in order:
+Run these SQL files in your  **Supabase SQL Editor** in order:
 1. `supabase/schema.sql` — tables, indexes, RLS
 2. `supabase/functions.sql` — stored procedures for pgvector search
 
