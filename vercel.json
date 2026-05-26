@@ -2,18 +2,27 @@
   "version": 2,
   "buildCommand": "npm run build",
   "functions": {
-    "api/memory/consolidate.ts": { "maxDuration": 30 }
+    "api/memory/consolidate.ts":    { "maxDuration": 30 },
+    "api/memory/context.ts":        { "maxDuration": 30 },
+    "api/memory/briefing.ts":       { "maxDuration": 15 }
   },
   "rewrites": [
-    { "source": "/memory/unified",     "destination": "/api/memory/unified" },
-    { "source": "/memory/write",       "destination": "/api/memory/write" },
-    { "source": "/memory/read",        "destination": "/api/memory/read" },
-    { "source": "/memory/search",      "destination": "/api/memory/search" },
-    { "source": "/memory/consolidate", "destination": "/api/memory/consolidate" },
-    { "source": "/memory/forget",      "destination": "/api/memory/forget" },
-    { "source": "/memory/pin",         "destination": "/api/memory/pin" },
-    { "source": "/health",             "destination": "/api/health" },
-    { "source": "/docs",               "destination": "/api/docs" },
-    { "source": "/",                   "destination": "/api/index" }
+    { "source": "/memory/unified",        "destination": "/api/memory/unified" },
+    { "source": "/memory/write",          "destination": "/api/memory/write" },
+    { "source": "/memory/read",           "destination": "/api/memory/read" },
+    { "source": "/memory/search",         "destination": "/api/memory/search" },
+    { "source": "/memory/consolidate",    "destination": "/api/memory/consolidate" },
+    { "source": "/memory/forget",         "destination": "/api/memory/forget" },
+    { "source": "/memory/pin",            "destination": "/api/memory/pin" },
+    { "source": "/memory/context",        "destination": "/api/memory/context" },
+    { "source": "/memory/briefing",       "destination": "/api/memory/briefing" },
+    { "source": "/memory/birthday",       "destination": "/api/memory/birthday" },
+    { "source": "/memory/birthdays",      "destination": "/api/memory/birthday" },
+    { "source": "/memory/action-log",     "destination": "/api/memory/action-log" },
+    { "source": "/memory/skill-feedback", "destination": "/api/memory/skill-feedback" },
+    { "source": "/memory/dream-state",    "destination": "/api/memory/dream-state" },
+    { "source": "/health",                "destination": "/api/health" },
+    { "source": "/docs",                  "destination": "/api/docs" },
+    { "source": "/",                      "destination": "/api/index" }
   ]
 }

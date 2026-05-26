@@ -7,7 +7,9 @@ import { getOrCreateUser } from "../../src/services/user.service";
 const Schema = z.object({
   user_id:    z.string().min(1),
   content:    z.string().min(1).max(10000),
-  type:       z.enum(["fact", "event", "preference", "summary"]),
+  type:       z.enum(["fact", "event", "preference", "summary",
+                      "birthday", "relationship", "action_log",
+                      "skill_feedback", "briefing", "tracked_topic"]),
   importance: z.enum(["critical", "high", "normal", "low"]),
   session_id: z.string().optional(),
   topic_tags: z.array(z.string()).optional(),

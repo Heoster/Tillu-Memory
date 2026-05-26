@@ -36,7 +36,7 @@ export const config = {
     nodeEnv: optional("NODE_ENV", "development"),
   },
   memory: {
-    workingTTL:         parseInt(optional("WORKING_MEMORY_TTL", "1800"), 10),
+    workingTTL:         parseInt(optional("WORKING_MEMORY_TTL", "28800"), 10), // 8 hours (was 30 min)
     stateTTL:           parseInt(optional("STATE_TTL", "3600"), 10),
     maxPinned:          parseInt(optional("MAX_PINNED_MEMORIES", "50"), 10),
     maxWorkingMessages: parseInt(optional("MAX_WORKING_MESSAGES", "50"), 10),
