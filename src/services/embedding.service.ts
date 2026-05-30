@@ -1,63 +1,66 @@
 /**
- * Embedding Service
+ * Embedding Service — Jina AI
  *
- * Uses Hugging Face Inference API — free tier, no credit card needed.
- * Model: sentence-transformers/all-MiniLM-L6-v2
- *   - 384 dimensions
- *   - Multilingual-capable (handles Hindi, Tamil, English)
- *   - Fast, lightweight, widely used
+ * Model: jina-embeddings-v2-base-en
+ *   - 768 dimensions
+ *   - Multilingual-capable (handles Hindi/English mix)
+ *   - Reachable from Vercel serverless (unlike HuggingFace api-inference)
+ *   - Free tier: 1M tokens/month
  *
- * Get a free token at: https://huggingface.co/settings/tokens
- * Set env var: HUGGINGFACE_API_KEY
- *
- * NOTE: The embedding model is LOCKED. Never change it without
- * re-embedding all stored memories in Supabase.
+ * NOTE: The embedding model is LOCKED at 768 dims.
+ * Never change it without re-embedding all stored memories in Supabase.
  */
 
 import { config } from "../config";
 import type { EmbeddingResult } from "../types";
 
-const HF_MODEL = "sentence-transformers/all-MiniLM-L6-v2";
-const HF_URL   = `https://api-inference.huggingface.co/pipeline/feature-extraction/${HF_MODEL}`;
+const JINA_MODEL = "jina-embeddings-v2-base-en";
+const JINA_URL   = "https://api.jina.ai/v1/embeddings";
+const DIMS       = 768;
 
 /**
- * Embed a single text string → 384-dim vector.
+ * Embed a single text string → 768-dim vector.
  */
 export async function embedText(text: string): Promise<EmbeddingResult> {
   const embeddings = await embedBatch([text]);
   return {
-    embedding:    embeddings[0],
-    model:        HF_MODEL,
-    tokens_used:  0, // HF doesn't report token usage
+    embedding:   embeddings[0]!,
+    model:       JINA_MODEL,
+    tokens_used: 0,
   };
 }
 
 /**
  * Embed multiple texts in one API call (more efficient).
+ * Jina accepts up to 2048 inputs per request.
  */
 export async function embedBatch(texts: string[]): Promise<number[][]> {
-  const response = await fetch(HF_URL, {
+  if (texts.length === 0) return [];
+
+  const response = await fetch(JINA_URL, {
     method: "POST",
     headers: {
       "Content-Type":  "application/json",
-      "Authorization": `Bearer ${config.huggingface.apiKey}`,
+      "Authorization": `Bearer ${config.jina.apiKey}`,
     },
     body: JSON.stringify({
-      inputs:  texts,
-      options: { wait_for_model: true }, // don't fail on cold start
+      model:  JINA_MODEL,
+      input:  texts,
     }),
   });
 
   if (!response.ok) {
     const err = await response.text();
-    throw new Error(`HuggingFace embedding error: ${response.status} — ${err}`);
+    throw new Error(`Jina embedding error: ${response.status} — ${err.slice(0, 200)}`);
   }
 
-  const data = await response.json() as number[][];
+  const data = await response.json() as {
+    data: Array<{ embedding: number[]; index: number }>;
+  };
 
-  // HF returns either number[][] (batch) or number[] (single) — normalise
-  if (Array.isArray(data[0])) {
-    return data as number[][];
-  }
-  return [data as unknown as number[]];
+  // Sort by index to preserve input order
+  const sorted = data.data.sort((a, b) => a.index - b.index);
+  return sorted.map(d => d.embedding);
 }
+
+export { DIMS as EMBEDDING_DIMS, JINA_MODEL as EMBEDDING_MODEL };

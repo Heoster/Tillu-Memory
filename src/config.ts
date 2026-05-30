@@ -28,8 +28,11 @@ export const config = {
   groq: {
     apiKey: required("GROQ_API_KEY"),
   },
+  jina: {
+    apiKey: required("JINA_API_KEY"),
+  },
   huggingface: {
-    apiKey: required("HUGGINGFACE_API_KEY"),
+    apiKey: optional("HUGGINGFACE_API_KEY", ""),
   },
   app: {
     port:    parseInt(optional("PORT", "3001"), 10),
@@ -43,7 +46,7 @@ export const config = {
     maxSemanticResults: parseInt(optional("MAX_SEMANTIC_RESULTS", "10"), 10),
     decayDays:          parseInt(optional("MEMORY_DECAY_DAYS", "90"), 10),
     // LOCKED — changing this requires re-embedding all memories
-    embeddingModel:      "sentence-transformers/all-MiniLM-L6-v2",
-    embeddingDimensions: 384,
+    embeddingModel:      "jina-embeddings-v2-base-en",
+    embeddingDimensions: 768,
   },
 } as const;

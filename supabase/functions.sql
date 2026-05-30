@@ -10,7 +10,7 @@
 
 CREATE OR REPLACE FUNCTION search_memories(
   p_user_id      TEXT,
-  p_embedding    vector(384),
+  p_embedding    vector(768),
   p_top_k        INT     DEFAULT 10,
   p_created_after TIMESTAMPTZ DEFAULT NULL
 )
